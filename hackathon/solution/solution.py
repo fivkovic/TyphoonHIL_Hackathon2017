@@ -34,26 +34,26 @@ def worker(msg: DataMessage) -> ResultsMessage:
         #ako je jeftina struja moze da bude ukljucen
         load2 = True
    
-   
+
+           
     pr = calculatePowerReference(msg)
     
-    if 7140 < msg.id <= 7200 and msg.bessSOC > 0 and msg.grid_status:
-        
+    
+    if (7140 < msg.id <= 7200 and msg.bessSOC > 0.05) and msg.grid_status:
         loadSum = 0.2
         if load2:
             loadSum += 0.5
         if load3:
             loadSum += 0.3
-            
-            
         pr = loadSum * msg.current_load
         
         if pr > 6.0:
-            pr = 6.0
-        
-        
+            pr = 1.0   
         
     pv = calculatePV(msg)
+    
+    
+    
     
     
     return ResultsMessage(data_msg=msg,
@@ -70,7 +70,7 @@ def calculatePowerReference(msg : DataMessage):
     if msg.bessSOC != 1: #ako baterija nije puna
         if msg.solar_production > msg.current_load: #ako ako je proizvodnja panela veca od potraznje struje
             return (-1)*(msg.solar_production - msg.current_load) #puni bateriju sa viskom
-    if msg.bessSOC < 0.20: #ako je ako je baterija 20% puna
+    if msg.bessSOC < 0.2: #ako je ako je baterija 20% puna
         if not msg.grid_status:
             return (0.0)
         else:
@@ -120,4 +120,3 @@ def run(args) -> None:
  
     for data in cntrl.get_data():
         cntrl.push_results(worker(data))
-        
